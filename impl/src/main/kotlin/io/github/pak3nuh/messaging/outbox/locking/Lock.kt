@@ -36,7 +36,6 @@ class LockFactoryImpl(private val provider: LockServiceProvider): LockFactory {
 }
 
 private class LockImpl(override val id: String, private val providerLock: ProviderLock) : Lock {
-
     override fun close() {
         providerLock.close()
     }

@@ -18,15 +18,27 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.slf4j:slf4j-api:2.0.6")
     testImplementation("org.slf4j:slf4j-simple:2.0.6")
+
+    // todo move to module
+    implementation("org.ktorm:ktorm-core:3.6.0")
+    testImplementation("com.h2database:h2:2.1.212")
 }
 
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
 }
+
+val compileJava: JavaCompile by tasks
+compileJava.targetCompatibility = "1.8"
+
+val compileTestJava: JavaCompile by tasks
+compileTestJava.targetCompatibility = "1.8"
+
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
     jvmTarget = "1.8"
 }
+
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
     jvmTarget = "1.8"
