@@ -1,10 +1,12 @@
 package io.github.pak3nuh.messaging.outbox.storage
 
 import io.github.pak3nuh.messaging.outbox.Entry
+import io.github.pak3nuh.util.logging.KLoggerFactory
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
-import org.ktorm.dsl.isNotNull
+import org.ktorm.dsl.isNull
 import org.ktorm.entity.Entity
+import org.ktorm.entity.EntitySequence
 import org.ktorm.entity.add
 import org.ktorm.entity.filter
 import org.ktorm.entity.find
@@ -23,22 +25,23 @@ class SqlEntryStorage(conStr: String, user: String?, pass: String?): EntryStorag
 
     private val database = Database.connect(conStr, user = user, password = pass)
 
-    private val storedEntriesTable = database.sequenceOf(StoredEntries)
+    private val storedEntriesTable = database.sequenceOf(EntryTable)
 
     override fun persist(entry: Entry) {
-        storedEntriesTable.add(PersistedEntry {
+        val entity = EntryEntity {
             created = Instant.now()
             key = entry.key
             value = entry.value
             userId = entry.id
-        })
+        }
+        storedEntriesTable.add(entity)
+        logger.debug("Inserted entry with ID {}", entity.id)
     }
 
     override fun getBatch(): Sequence<StoredEntry> {
-        return storedEntriesTable.filter { it.submitted.isNotNull()  }
+        return storedEntriesTable.filter { it.submitted.isNull()  }
             .sortedBy { it.created }
-            .map { StoredEntry(it.id, it.created, Entry(it.key, it.value, it.userId), it.submitted, it.error) }
-            .asSequence()
+            .mapToStored()
     }
 
     override fun markProcessed(entry: StoredEntry, error: String?) {
@@ -51,9 +54,17 @@ class SqlEntryStorage(conStr: String, user: String?, pass: String?): EntryStorag
     override fun close() {
         // noOp
     }
+
+    private fun EntitySequence<EntryEntity, EntryTable>.mapToStored() =
+        this.map { StoredEntry(it.id, it.created, Entry(it.key, it.value, it.userId), it.submitted, it.error) }
+            .asSequence()
+
+    private companion object {
+        val logger = KLoggerFactory.getLogger<SqlEntryStorage>()
+    }
 }
 
-private object StoredEntries: Table<PersistedEntry>("stored_entries") {
+private object EntryTable: Table<EntryEntity>("stored_entries") {
     val id = int("id").primaryKey().bindTo { it.id }
     val created = timestamp("created").bindTo { it.created }
     val key = bytes("key").bindTo { it.key }
@@ -63,13 +74,13 @@ private object StoredEntries: Table<PersistedEntry>("stored_entries") {
     val error = varchar("error").bindTo { it.error }
 }
 
-private interface PersistedEntry: Entity<PersistedEntry> {
-    companion object : Entity.Factory<PersistedEntry>()
+private interface EntryEntity: Entity<EntryEntity> {
+    companion object : Entity.Factory<EntryEntity>()
     val id: Int
     var created: Instant
     var key: ByteArray
     var value: ByteArray
-    var userId: String?
+    var userId: String
     var submitted: Instant?
     var error: String?
 }

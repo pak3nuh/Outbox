@@ -91,7 +91,7 @@ interface Sink: AutoCloseable {
     fun submit(entry: Entry)
 }
 
-data class Entry(val key: ByteArray, val value: ByteArray, val id: String? = null) {
+data class Entry(val key: ByteArray, val value: ByteArray, val id: String = "", val metadata: Map<String, String> = emptyMap()) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -101,6 +101,7 @@ data class Entry(val key: ByteArray, val value: ByteArray, val id: String? = nul
         if (!key.contentEquals(other.key)) return false
         if (!value.contentEquals(other.value)) return false
         if (id != other.id) return false
+        if (metadata != other.metadata) return false
 
         return true
     }
@@ -108,7 +109,9 @@ data class Entry(val key: ByteArray, val value: ByteArray, val id: String? = nul
     override fun hashCode(): Int {
         var result = key.contentHashCode()
         result = 31 * result + value.contentHashCode()
-        result = 31 * result + (id?.hashCode() ?: 0)
+        result = 31 * result + id.hashCode()
+        result = 31 * result + metadata.hashCode()
         return result
     }
+
 }

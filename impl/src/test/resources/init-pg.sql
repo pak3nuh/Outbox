@@ -1,9 +1,9 @@
 
 create table if not exists stored_entries(
-    id int NOT NULL primary key auto_increment,
+    id int generated always as identity,
     created timestamp not null,
-    "key" binary(1024) not null,
-    "value" binary(1024) not null ,
+    "key" bytea not null,
+    "value" bytea not null ,
     user_id varchar(1000) not null,
     submitted timestamp,
     error varchar(8000)
