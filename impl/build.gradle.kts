@@ -18,6 +18,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.slf4j:slf4j-api:2.0.6")
     testImplementation("org.slf4j:slf4j-simple:2.0.6")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // todo move to module
     implementation("org.ktorm:ktorm-core:3.6.0")

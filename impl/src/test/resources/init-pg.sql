@@ -5,6 +5,7 @@ create table if not exists stored_entries(
     "key" bytea not null,
     "value" bytea not null ,
     user_id varchar(1000) not null,
+    metadata varchar(8000) not null,
     submitted timestamp,
     error varchar(8000)
 );

@@ -2,6 +2,7 @@ package io.github.pak3nuh.messaging.outbox
 
 import io.github.pak3nuh.messaging.outbox.storage.EntryStorage
 import io.github.pak3nuh.util.CloseStack
+import io.github.pak3nuh.util.MetadataKey
 import io.github.pak3nuh.util.logging.KLoggerFactory
 import java.util.concurrent.Executors
 
@@ -9,6 +10,8 @@ interface Outbox : AutoCloseable {
     fun submit(entry: Entry)
     fun start()
 }
+
+private val tryMetadataKey = MetadataKey.outbox + "try"
 
 class OutboxImpl(private val storage: EntryStorage, private val errorHandler: ErrorHandler, private val sink: Sink): Outbox {
 
@@ -29,7 +32,9 @@ class OutboxImpl(private val storage: EntryStorage, private val errorHandler: Er
         }
     }
     override fun submit(entry: Entry) {
-        storage.persist(entry)
+        val copy = HashMap<String, String>(entry.metadata)
+        copy.compute(tryMetadataKey.toString()) { _, curr -> "${(curr?.toInt() ?: 0) + 1}" }
+        storage.persist(entry.copy(metadata = copy))
     }
 
     internal fun processEntries() {
@@ -38,11 +43,11 @@ class OutboxImpl(private val storage: EntryStorage, private val errorHandler: Er
                     sink.submit(it.entry)
                     storage.markProcessed(it)
                 } catch (exception: Exception) {
-                    val recovery = errorHandler.onPersistError(it.entry, exception)
+                    val recovery = errorHandler.onSubmitError(it.entry, exception)
                     logger.error("Couldn't process entry {}. Recovery with {}", it, recovery)
                     storage.markProcessed(it, exception.message)
                     when(recovery) {
-                        ErrorHandler.Recovery.RETRY -> storage.persist(it.entry)
+                        ErrorHandler.Recovery.RETRY -> this.submit(it.entry)
                         ErrorHandler.Recovery.NONE -> { }
                     }
                 }
@@ -79,7 +84,7 @@ class OutboxImpl(private val storage: EntryStorage, private val errorHandler: Er
 }
 
 interface ErrorHandler {
-    fun onPersistError(entry: Entry, cause: Exception): Recovery
+    fun onSubmitError(entry: Entry, cause: Exception): Recovery
 
     enum class Recovery {
         NONE,
