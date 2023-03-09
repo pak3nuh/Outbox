@@ -16,7 +16,7 @@ private val logger: Logger = LoggerFactory.getLogger(SharedFilesystemProvider::c
 
 class SharedFilesystemProvider(private val lockFolder: Path) : LockServiceProvider {
     override val provider: String = "filesystem"
-    override fun obtainLock(id: String, timeout: Duration): Either<ProviderLock, ProviderError> {
+    override fun obtainLock(id: String, timeout: Duration?): Either<ProviderLock, ProviderError> {
         return try {
             val lockFile: Path = lockFolder.resolve("$id-$provider.lock")
             ensureFileExists(lockFile)

@@ -12,13 +12,14 @@ class CloseStack: AutoCloseable {
         add(handle::close)
     }
 
-    fun add(closer: () -> Unit) {
+    fun add(next: () -> Unit) {
+        val previous = closeFun
         closeFun = {
-            closeFun()
+            previous()
             try {
-                closer()
+                next()
             } catch (e: Exception) {
-                logger.error("Couldn't close $closer", e)
+                logger.error("Couldn't close $next", e)
             }
         }
     }
