@@ -6,3 +6,4 @@ Generic implementation of the Outbox pattern.
 
 - Create locking module
 - Create API module
+- Use testcontainers to test live databases

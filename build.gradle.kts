@@ -1,22 +1,47 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    kotlin("jvm") version "1.8.10"
+    idea
+    // have to apply plugin here to have closures available in the subproject section
+    kotlin("jvm") version Versions.kotlin
 }
 
-group = "io.github.pak3nuh.messaging"
-version = "0.0.1-SNAPSHOT"
+allprojects {
+    group = Projects.baseGroupId
+    version = Versions.project
 
-repositories {
-    mavenCentral()
+    repositories {
+        mavenCentral()
+    }
 }
 
-dependencies {
-    testImplementation(kotlin("test"))
-}
+subprojects {
+    apply(plugin = "idea")
+    apply(plugin = "kotlin")
 
-tasks.test {
-    useJUnitPlatform()
-}
+    dependencies {
+        testImplementation(Dependencies.junitApi)
+        testRuntimeOnly(Dependencies.junitEngine)
+        implementation(kotlin(Dependencies.kotlinStdLibModule))
+    }
 
-kotlin {
-    jvmToolchain(8)
+    tasks.getByName<Test>("test") {
+        useJUnitPlatform()
+    }
+
+    val compileJava: JavaCompile by tasks
+    compileJava.targetCompatibility = "1.8"
+
+    val compileTestJava: JavaCompile by tasks
+    compileTestJava.targetCompatibility = "1.8"
+
+    val compileKotlin: KotlinCompile by tasks
+    compileKotlin.kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    val compileTestKotlin: KotlinCompile by tasks
+    compileTestKotlin.kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
