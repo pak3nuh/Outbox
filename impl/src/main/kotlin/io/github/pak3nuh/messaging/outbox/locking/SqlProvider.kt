@@ -15,6 +15,21 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Executors
 
+/**
+ * Gets and releases connections.
+ */
+interface SqlConnectionProvider {
+    /**
+     * Get a connection and sets the [timeout] for operations.
+     * @param timeout The timeout for executing statements.
+     */
+    fun getConnection(timeout: Duration?): Connection
+
+    /**
+     * Releases a connection.
+     */
+    fun release(connection: Connection)
+}
 
 /**
  * Obtains a lock on a specific row in an SQL table. This lock is held as long as the connection is active or
@@ -24,15 +39,15 @@ import java.util.concurrent.Executors
  * This is meant to simplify implementation because locking single rows on update statements is far more
  * deterministic than locking tables on row insertion.
  */
-class SqlProvider(private val tableName: String, private val connectionProvider: (Duration?) -> Connection) : LockServiceProvider {
+class SqlProvider(private val tableName: String, private val connectionProvider: SqlConnectionProvider) : LockServiceProvider {
     override val provider: String = "sql"
 
     override fun obtainLock(id: String, timeout: Duration?): Either<ProviderLock, ProviderError> {
         return try {
-            val connection = connectionProvider(timeout)
+            val connection = connectionProvider.getConnection(timeout)
             connection.autoCommit = false
             ensureId(id, connection)
-            val sqlLock = SqlLock(connection, tableName, id)
+            val sqlLock = SqlLock(connection, tableName, id, connectionProvider::release)
             sqlLock.lock()
             return Either.First(sqlLock)
         } catch (timeout: SQLTimeoutException) {
@@ -65,7 +80,12 @@ class SqlProvider(private val tableName: String, private val connectionProvider:
 
 }
 
-private class SqlLock(val connection: Connection, private val tableName: String, val id: String): ProviderLock {
+private class SqlLock(
+    private val connection: Connection,
+    private val tableName: String,
+    private val id: String,
+    private val onRelease: (Connection) -> Unit
+): ProviderLock {
 
     private val closeStack = CloseStack()
 
@@ -97,8 +117,12 @@ private class SqlLock(val connection: Connection, private val tableName: String,
     }
 
     override fun close() {
-        logger.debug("Releasing Lock with id {}", tableName)
-        closeStack.close()
+        try {
+            logger.debug("Releasing Lock with id {}", tableName)
+            closeStack.close()
+        } finally {
+            onRelease(connection)
+        }
     }
 
     private companion object {
@@ -106,11 +130,11 @@ private class SqlLock(val connection: Connection, private val tableName: String,
     }
 }
 
-class DriverManagerConnection(private val conStr: String, private val username: String?, private val password: String?): (Duration?) -> Connection {
+class DriverManagerProvider(private val conStr: String, private val username: String?, private val password: String?): SqlConnectionProvider {
 
     private val executor = Executors.newSingleThreadExecutor()
 
-    override fun invoke(timeout: Duration?): Connection {
+    override fun getConnection(timeout: Duration?): Connection {
         val connection = if (username != null && password != null) {
             DriverManager.getConnection(conStr, username, password)
         } else {
@@ -122,4 +146,12 @@ class DriverManagerConnection(private val conStr: String, private val username: 
         return connection
     }
 
+    override fun release(connection: Connection) {
+        logger.debug("Releasing connection")
+        connection.close()
+    }
+
+    private companion object {
+        val logger = KLoggerFactory.getLogger<DriverManagerProvider>()
+    }
 }
