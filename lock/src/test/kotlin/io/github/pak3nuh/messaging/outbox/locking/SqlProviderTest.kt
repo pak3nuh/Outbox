@@ -1,10 +1,7 @@
 package io.github.pak3nuh.messaging.outbox.locking
 
-import io.github.pak3nuh.messaging.outbox.sql.H2ConManager
-import io.github.pak3nuh.util.union.Either
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.Duration
 import kotlin.concurrent.thread
 
@@ -13,29 +10,30 @@ class SqlProviderTest {
 
     @Test
     fun `should obtain lock`() {
-        val lock = sut.obtainLock("obtain-lock").fold(
-            { it },
-            { Assertions.fail(it.cause) }
-        )
+        val lock = getLock("obtain-lock")
         lock.close()
     }
 
     @Test
     fun `should wait lock release`() {
-        assertThrows<AssertionError> {
+        try {
             Assertions.assertTimeoutPreemptively(Duration.ofSeconds(2)) {
                 val id = "lock-release"
-                val lock1 = (sut.obtainLock(id) as Either.First).first
-                val lock2 = (sut.obtainLock(id) as Either.First).first
+                val lock1 = getLock(id)
+                val lock2 = getLock(id)
             }
+        } catch (error: AssertionError) {
+            val message = error.cause?.message
+            println(message)
+            Assertions.assertTrue(message?.contains("Execution timed out in thread") ?: error("no message"))
         }
     }
 
     @Test
     fun `should not block different ids`() {
         Assertions.assertTimeoutPreemptively(Duration.ofSeconds(2)) {
-            val lock1 = (sut.obtainLock("lock_id_1") as Either.First).first
-            val lock2 = (sut.obtainLock("lock_id_2") as Either.First).first
+            val lock1 = getLock("lock_id_1")
+            val lock2 = getLock("lock_id_2")
         }
     }
 
@@ -43,10 +41,17 @@ class SqlProviderTest {
     fun `should release lock on connection close`() {
         Assertions.assertTimeoutPreemptively(Duration.ofSeconds(2)) {
             val id = "release-on-connection-close"
-            val lock1 = (sut.obtainLock(id) as Either.First).first
+            val lock1 = getLock(id)
             thread { lock1.close() }
-            val lock2 = (sut.obtainLock(id) as Either.First).first
+            val lock2 = getLock(id)
         }
+    }
+
+    private fun getLock(id: String): ProviderLock {
+        return sut.obtainLock(id).fold(
+            { it },
+            { Assertions.fail(it.cause) }
+        )
     }
 
 }

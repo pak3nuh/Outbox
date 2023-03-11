@@ -9,4 +9,4 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - "./resources/init-pg.sql:/docker-entrypoint-initdb.d/init.sql"
+      - ".src/main/resources/init-pg.sql:/docker-entrypoint-initdb.d/init.sql"
