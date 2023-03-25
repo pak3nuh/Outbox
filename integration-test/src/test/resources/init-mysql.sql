@@ -1,13 +1,13 @@
 
 create table if not exists stored_entries(
-    id int generated always as identity,
+    id int primary key auto_increment,
     created timestamp not null,
-    "key" bytea not null,
-    "value" bytea not null ,
+    `key` blob not null,
+    `value` blob not null,
     user_id varchar(1000) not null,
-    metadata varchar(8000) not null,
+    metadata text not null,
     submitted timestamp,
-    error varchar(8000)
+    error text
 );
 
 create table if not exists application_locks(
@@ -15,4 +15,4 @@ create table if not exists application_locks(
     locked_at timestamp
 );
 
-create index if not exists id_stored_entry_created ON stored_entries(created asc);
+alter table stored_entries add index id_stored_entry_created (created asc);
