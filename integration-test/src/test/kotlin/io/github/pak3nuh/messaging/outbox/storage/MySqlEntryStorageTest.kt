@@ -1,7 +1,7 @@
 package io.github.pak3nuh.messaging.outbox.storage
 
 import io.github.pak3nuh.messaging.outbox.Entry
-import io.github.pak3nuh.messaging.outbox.containers.createPgContainer
+import io.github.pak3nuh.messaging.outbox.containers.createMySqlContainer
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -9,13 +9,13 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
 @Testcontainers
-class PostgresEntryStorageTest {
+class MySqlEntryStorageTest {
 
     @Test
     fun `should store entry`() {
         val host = container.host
         val port = container.firstMappedPort
-        val entryStorage = SqlEntryStorage("jdbc:postgresql://$host:$port/postgres", "postgres", "postgres")
+        val entryStorage = SqlEntryStorage("jdbc:mysql://$host:$port/database", "mysql", "mysql")
         entryStorage.persist(Entry(
             byteArrayOf(1),
             byteArrayOf(2),
@@ -35,6 +35,6 @@ class PostgresEntryStorageTest {
     companion object {
         @JvmStatic
         @Container
-        val container = createPgContainer()
+        val container = createMySqlContainer()
     }
 }

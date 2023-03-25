@@ -1,5 +1,6 @@
 package io.github.pak3nuh.messaging.outbox.locking
 
+import io.github.pak3nuh.messaging.outbox.containers.createMySqlContainer
 import io.github.pak3nuh.util.logging.KLoggerFactory
 import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.GenericContainer
@@ -24,15 +25,7 @@ class MySqlLockTest: AbstractSqlLockTest() {
 
         @JvmStatic
         @Container
-        private val container: GenericContainer<*> = GenericContainer("mysql:8.0.32")
-            .withEnv(mapOf(
-                "MYSQL_ROOT_PASSWORD" to "mysql",
-                "MYSQL_USER" to "mysql",
-                "MYSQL_PASSWORD" to "mysql",
-                "MYSQL_DATABASE" to "database"
-            ))
-            .withExposedPorts(3306)
-            .withFileSystemBind("src/test/resources/init-mysql.sql", "/docker-entrypoint-initdb.d/init.sql")
+        private val container: GenericContainer<*> = createMySqlContainer()
 
         @JvmStatic
         @BeforeAll

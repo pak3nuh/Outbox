@@ -30,19 +30,21 @@ subprojects {
         useJUnitPlatform()
     }
 
+    val jvmVersion = Versions.jvm
+
     val compileJava: JavaCompile by tasks
-    compileJava.targetCompatibility = "1.8"
+    compileJava.targetCompatibility = jvmVersion
 
     val compileTestJava: JavaCompile by tasks
-    compileTestJava.targetCompatibility = "1.8"
+    compileTestJava.targetCompatibility = jvmVersion
 
     val compileKotlin: KotlinCompile by tasks
     compileKotlin.kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = jvmVersion
     }
 
     val compileTestKotlin: KotlinCompile by tasks
     compileTestKotlin.kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = jvmVersion
     }
 }
