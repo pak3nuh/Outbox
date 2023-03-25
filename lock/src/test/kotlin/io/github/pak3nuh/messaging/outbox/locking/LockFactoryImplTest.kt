@@ -6,6 +6,6 @@ class LockFactoryImplTest {
 
     @Test
     fun `should acquire lock`() {
-
+        TODO()
     }
 }
