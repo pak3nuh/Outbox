@@ -7,20 +7,8 @@ import io.github.pak3nuh.util.logging.KLoggerFactory
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.isNull
-import org.ktorm.entity.Entity
-import org.ktorm.entity.EntitySequence
-import org.ktorm.entity.add
-import org.ktorm.entity.filter
-import org.ktorm.entity.find
-import org.ktorm.entity.map
-import org.ktorm.entity.sequenceOf
-import org.ktorm.entity.sortedBy
-import org.ktorm.entity.update
-import org.ktorm.schema.Table
-import org.ktorm.schema.bytes
-import org.ktorm.schema.int
-import org.ktorm.schema.timestamp
-import org.ktorm.schema.varchar
+import org.ktorm.entity.*
+import org.ktorm.schema.*
 import java.time.Instant
 
 class SqlEntryStorage(conStr: String, user: String?, pass: String?) : EntryStorage {

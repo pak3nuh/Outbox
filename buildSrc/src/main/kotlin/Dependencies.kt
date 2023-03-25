@@ -1,4 +1,5 @@
 object Dependencies {
+    const val mokk = "io.mockk:mockk:1.13.4"
     const val junitApi = "org.junit.jupiter:junit-jupiter-api:5.8.1"
     const val junitEngine = "org.junit.jupiter:junit-jupiter-engine:5.8.1"
     const val slf4jApi = "org.slf4j:slf4j-api:2.0.6"
