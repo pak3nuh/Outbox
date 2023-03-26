@@ -39,8 +39,8 @@ interface SqlConnectionProvider {
  * This is meant to simplify implementation because locking single rows on update statements is far more
  * deterministic than locking tables on row insertion.
  */
-class SqlProvider(private val tableName: String, private val connectionProvider: SqlConnectionProvider) : LockServiceProvider {
-    override val provider: String = "sql"
+class SqlLockServiceProvider(private val tableName: String, private val connectionProvider: SqlConnectionProvider) : LockServiceProvider {
+    override val provider: String = "builtin.sql"
 
     override fun obtainLock(id: String, timeout: Duration?): Either<ProviderLock, ProviderError> {
         return try {
@@ -75,7 +75,7 @@ class SqlProvider(private val tableName: String, private val connectionProvider:
     }
 
     private companion object {
-        val logger: Logger = LoggerFactory.getLogger(SqlProvider::class.java)
+        val logger: Logger = LoggerFactory.getLogger(SqlLockServiceProvider::class.java)
     }
 
 }

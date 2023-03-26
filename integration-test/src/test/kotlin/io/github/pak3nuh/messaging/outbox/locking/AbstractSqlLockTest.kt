@@ -12,7 +12,7 @@ abstract class AbstractSqlLockTest {
     abstract val driverManagerProvider: DriverManagerProvider
     private val sut by lazy {
         LockFactoryImpl(
-            SqlProvider(
+            SqlLockServiceProvider(
                 "application_locks",
                 driverManagerProvider
             )
