@@ -1,19 +1,22 @@
 package io.github.pak3nuh.messaging.outbox
 
+import io.github.pak3nuh.messaging.outbox.locking.LockFactory
 import io.github.pak3nuh.messaging.outbox.storage.EntryStorage
 import io.github.pak3nuh.util.CloseStack
 import io.github.pak3nuh.util.MetadataKey
 import io.github.pak3nuh.util.logging.KLoggerFactory
+import java.time.Duration
 import java.util.concurrent.Executors
-
-interface Outbox : AutoCloseable {
-    fun submit(entry: Entry)
-    fun start()
-}
 
 private val tryMetadataKey = MetadataKey.outbox + "try"
 
-class OutboxImpl(private val storage: EntryStorage, private val errorHandler: ErrorHandler, private val sink: Sink): Outbox {
+// todo export timeouts and sleeps to parameters
+// todo export loop mechanic to interface
+class OutboxImpl(
+    private val storage: EntryStorage,
+    private val errorHandler: ErrorHandler,
+    private val sink: Sink,
+    private val lockFactory: LockFactory): Outbox {
 
     private val closeStack = CloseStack()
     private val executorService = Executors.newSingleThreadExecutor()
@@ -37,10 +40,14 @@ class OutboxImpl(private val storage: EntryStorage, private val errorHandler: Er
         storage.persist(entry.copy(metadata = copy))
     }
 
-    internal fun processEntries() {
-        storage.getBatch().forEach {
+    private fun processEntries() {
+        val entryList = storage.getBatch().toList()
+        logger.debug("Processing entry batch with {} records.", entryList.size)
+        entryList.forEach {
                 try {
+                    logger.trace("Submitting user entry with id {}.", it.entry.id)
                     sink.submit(it.entry)
+                    logger.trace("Marking entry {} as processed.", it.entry.id)
                     storage.markProcessed(it)
                 } catch (exception: Exception) {
                     val recovery = errorHandler.onSubmitError(it.entry, exception)
@@ -61,9 +68,16 @@ class OutboxImpl(private val storage: EntryStorage, private val errorHandler: Er
     private fun processLoop() {
         if (running) {
             try {
-                processEntries()
+                logger.debug("Acquiring lock")
+                val lock = lockFactory.tryLock("processing-loop", Duration.ofSeconds(1))
+                if (lock != null) {
+                    processEntries()
+                } else {
+                    logger.debug("Lock not obtained, skipping")
+                }
             } catch (_: InterruptedException) {
                 logger.info("Interrupted")
+                running = false
                 return
             }
             catch (exception: Exception) {
@@ -81,42 +95,4 @@ class OutboxImpl(private val storage: EntryStorage, private val errorHandler: Er
     private companion object {
         val logger = KLoggerFactory.getLogger<OutboxImpl>()
     }
-}
-
-interface ErrorHandler {
-    fun onSubmitError(entry: Entry, cause: Exception): Recovery
-
-    enum class Recovery {
-        NONE,
-        RETRY
-    }
-}
-
-interface Sink: AutoCloseable {
-    fun submit(entry: Entry)
-}
-
-data class Entry(val key: ByteArray, val value: ByteArray, val id: String = "", val metadata: Map<String, String> = emptyMap()) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Entry
-
-        if (!key.contentEquals(other.key)) return false
-        if (!value.contentEquals(other.value)) return false
-        if (id != other.id) return false
-        if (metadata != other.metadata) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = key.contentHashCode()
-        result = 31 * result + value.contentHashCode()
-        result = 31 * result + id.hashCode()
-        result = 31 * result + metadata.hashCode()
-        return result
-    }
-
 }

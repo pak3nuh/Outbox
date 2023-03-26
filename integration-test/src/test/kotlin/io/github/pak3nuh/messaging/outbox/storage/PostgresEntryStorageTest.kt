@@ -16,12 +16,14 @@ class PostgresEntryStorageTest {
         val host = container.host
         val port = container.firstMappedPort
         val entryStorage = SqlEntryStorage("jdbc:postgresql://$host:$port/postgres", "postgres", "postgres")
-        entryStorage.persist(Entry(
+        entryStorage.persist(
+            Entry(
             byteArrayOf(1),
             byteArrayOf(2),
             "should-store-entry",
             mapOf(Pair("version","123"))
-        ))
+        )
+        )
 
         val batch = entryStorage.getBatch()
         assertEquals(1, batch.count())
