@@ -15,5 +15,4 @@ supported databases. For now, tests include:
 
 ### TODO list
 
-- Create API module
 - document database schema or provide a liquibase patch

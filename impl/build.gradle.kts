@@ -10,5 +10,6 @@ dependencies {
     // todo move to module
     implementation("org.ktorm:ktorm-core:3.6.0")
     testImplementation(project(":test-util"))
+    testImplementation("io.mockk:mockk:1.13.5")
 
 }

@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 import kotlin.concurrent.thread
 
-class SqlLockServiceProviderTest {
-    private val sut = SqlLockServiceProvider("application_locks", H2ConManager())
+class SqlLockProviderTest {
+    private val sut = SqlLockProvider("application_locks", H2ConManager())
 
     @Test
     fun `should obtain lock`() {

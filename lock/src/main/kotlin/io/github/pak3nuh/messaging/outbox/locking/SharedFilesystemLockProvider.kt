@@ -12,9 +12,9 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.time.Duration
 
-private val logger: Logger = LoggerFactory.getLogger(SharedFilesystemProvider::class.java)
+private val logger: Logger = LoggerFactory.getLogger(SharedFilesystemLockProvider::class.java)
 
-class SharedFilesystemProvider(private val lockFolder: Path) : LockServiceProvider {
+class SharedFilesystemLockProvider(private val lockFolder: Path) : LockProvider {
     override val provider: String = "builtin.filesystem"
     override fun obtainLock(id: String, timeout: Duration?): Either<ProviderLock, ProviderError> {
         return try {

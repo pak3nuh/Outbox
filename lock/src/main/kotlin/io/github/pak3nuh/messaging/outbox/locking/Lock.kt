@@ -20,7 +20,7 @@ interface LockFactory {
 }
 
 
-class LockFactoryImpl(private val provider: LockServiceProvider): LockFactory {
+class LockFactoryImpl(private val provider: LockProvider): LockFactory {
     override fun tryLock(id: String, timeout: Duration): Lock? {
         val actualDuration = if (timeout == Duration.ZERO) null else timeout
         return provider.obtainLock(id, actualDuration).fold(

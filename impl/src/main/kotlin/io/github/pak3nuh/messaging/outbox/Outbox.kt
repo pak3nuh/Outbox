@@ -1,35 +1,31 @@
 package io.github.pak3nuh.messaging.outbox
 
-import io.github.pak3nuh.messaging.outbox.locking.LockFactory
 import io.github.pak3nuh.messaging.outbox.storage.EntryStorage
 import io.github.pak3nuh.util.CloseStack
 import io.github.pak3nuh.util.MetadataKey
 import io.github.pak3nuh.util.logging.KLoggerFactory
-import java.time.Duration
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.atomic.AtomicBoolean
 
 private val tryMetadataKey = MetadataKey.outbox + "try"
 
-// todo export timeouts and sleeps to parameters
-// todo export loop mechanic to interface
 class OutboxImpl(
     private val storage: EntryStorage,
     private val errorHandler: ErrorHandler,
-    private val sink: Sink,
-    private val lockFactory: LockFactory): Outbox {
+    private val sink: Sink
+    ): Outbox {
 
     private val closeStack = CloseStack()
-    private val executorService = Executors.newSingleThreadExecutor()
-    @Volatile
-    private var running = false
+    private val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    private val running = AtomicBoolean(false)
 
     init {
-        executorService.submit { processLoop() }
         with(closeStack) {
             add(storage)
             add(sink)
             add {
-                running = false
+                running.set(false)
                 executorService.shutdown()
             }
         }
@@ -59,33 +55,6 @@ class OutboxImpl(
                     }
                 }
             }
-    }
-
-    override fun start() {
-        running = true
-    }
-
-    private fun processLoop() {
-        if (running) {
-            try {
-                logger.debug("Acquiring lock")
-                val lock = lockFactory.tryLock("processing-loop", Duration.ofSeconds(1))
-                if (lock != null) {
-                    processEntries()
-                } else {
-                    logger.debug("Lock not obtained, skipping")
-                }
-            } catch (_: InterruptedException) {
-                logger.info("Interrupted")
-                running = false
-                return
-            }
-            catch (exception: Exception) {
-                logger.error("Error running process loop", exception)
-            }
-        }
-        Thread.sleep(1_000)
-        executorService.submit { processLoop() }
     }
 
     override fun close() {

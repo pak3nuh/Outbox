@@ -10,9 +10,7 @@ data class Entry(val key: ByteArray, val value: ByteArray, val id: String = "", 
         if (!key.contentEquals(other.key)) return false
         if (!value.contentEquals(other.value)) return false
         if (id != other.id) return false
-        if (metadata != other.metadata) return false
-
-        return true
+        return metadata == other.metadata
     }
 
     override fun hashCode(): Int {

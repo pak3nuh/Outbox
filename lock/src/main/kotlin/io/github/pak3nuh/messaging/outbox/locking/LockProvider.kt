@@ -7,7 +7,7 @@ import java.time.Duration
  * An abstraction over the actual locking mechanism chosen.
  * Semantics may vary slightly between providers but the general contract still holds.
  */
-interface LockServiceProvider {
+interface LockProvider {
     /**
      * A key to identify the provider. Should be as unique as possible.
      */
