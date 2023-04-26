@@ -49,7 +49,7 @@ class ExclusiveLooper(
                 }
             } catch (_: InterruptedException) {
                 logger.info("Interrupted. Will exit loop.")
-                running.set(false)
+                endLoop()
                 return
             }
             catch (exception: Exception) {

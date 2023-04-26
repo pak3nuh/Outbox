@@ -73,6 +73,7 @@ class ExclusiveLooperTest {
     @Test
     fun `should end processing on interrupted thread`() {
         every { executorServiceMock.submit(any()) } returns null
+        every { executorServiceMock.shutdown() } just Runs
         sut.startLoop()
         every { lockFactoryMock.tryLock(lockId, lockTimeout) } returns LockStub()
         every { loopActionMock.invoke() } answers {
@@ -83,6 +84,7 @@ class ExclusiveLooperTest {
         sut.processLoop()
 
         verify { loopActionMock.invoke() }
+        verify { executorServiceMock.shutdown() }
         verify(exactly = 0) { executorServiceMock.schedule(any(), loopSleepTime.toMillis(), TimeUnit.MILLISECONDS) }
     }
 }
