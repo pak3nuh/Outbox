@@ -40,7 +40,7 @@ class ExclusiveLooper(
             try {
                 logger.debug("Acquiring lock")
                 val lock = lockFactory.tryLock("processing-loop", lockTimeout)
-                if (lock != null) {
+                if (lock !== null) {
                     lock.use {
                         loopAction()
                     }

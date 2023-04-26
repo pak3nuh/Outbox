@@ -2,13 +2,13 @@ package io.github.pak3nuh.messaging.outbox
 
 import io.github.pak3nuh.messaging.outbox.storage.EntryStorage
 import io.github.pak3nuh.util.CloseStack
-import io.github.pak3nuh.util.MetadataKey
+import io.github.pak3nuh.util.MetadataKeys
 import io.github.pak3nuh.util.logging.KLoggerFactory
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
 
-private val tryMetadataKey = MetadataKey.outbox + "try"
+private const val tryMetadataKey = MetadataKeys.outbox + ".try"
 
 class OutboxImpl(
     private val storage: EntryStorage,
@@ -32,7 +32,7 @@ class OutboxImpl(
     }
     override fun submit(entry: Entry) {
         val copy = HashMap<String, String>(entry.metadata)
-        copy.compute(tryMetadataKey.toString()) { _, curr -> "${(curr?.toInt() ?: 0) + 1}" }
+        copy.compute(tryMetadataKey) { _, curr -> "${(curr?.toInt() ?: 0) + 1}" }
         storage.persist(entry.copy(metadata = copy))
     }
 
