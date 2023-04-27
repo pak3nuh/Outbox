@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinTest
 
 dependencies {
     testImplementation("org.testcontainers:testcontainers:1.17.6")
@@ -9,3 +10,6 @@ dependencies {
     testImplementation("org.postgresql:postgresql:42.6.0")
     testImplementation("mysql:mysql-connector-java:8.0.32")
 }
+
+val test: Test by tasks
+test.onlyIf { project.hasProperty("integration-test") }

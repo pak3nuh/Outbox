@@ -13,6 +13,9 @@ supported databases. For now, tests include:
 - MySql 8
 - H2
 
+The integration test module doesn't run by default. To run you need to add the property `integration-test` like so
+`gradle integration-test:test -Pintegration-test`.
+
 ### TODO list
 
 - document database schema or provide a liquibase patch
