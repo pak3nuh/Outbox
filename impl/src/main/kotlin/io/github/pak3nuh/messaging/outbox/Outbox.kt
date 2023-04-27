@@ -17,17 +17,11 @@ class OutboxImpl(
     ): Outbox {
 
     private val closeStack = CloseStack()
-    private val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
-    private val running = AtomicBoolean(false)
 
     init {
         with(closeStack) {
             add(storage)
             add(sink)
-            add {
-                running.set(false)
-                executorService.shutdown()
-            }
         }
     }
     override fun submit(entry: Entry) {
@@ -36,17 +30,19 @@ class OutboxImpl(
         storage.persist(entry.copy(metadata = copy))
     }
 
-    private fun processEntries() {
+    override fun processEntries() {
         val entryList = storage.getBatch().toList()
         logger.debug("Processing entry batch with {} records.", entryList.size)
         entryList.forEach {
+            var erroredSystem = ErrorHandler.ErroredSystem.SINK
                 try {
                     logger.trace("Submitting user entry with id {}.", it.entry.id)
                     sink.submit(it.entry)
+                    erroredSystem = ErrorHandler.ErroredSystem.MARK_PROCESSED
                     logger.trace("Marking entry {} as processed.", it.entry.id)
                     storage.markProcessed(it)
                 } catch (exception: Exception) {
-                    val recovery = errorHandler.onSubmitError(it.entry, exception)
+                    val recovery = errorHandler.onSubmitError(erroredSystem, it.entry, exception)
                     logger.error("Couldn't process entry {}. Recovery with {}", it, recovery)
                     storage.markProcessed(it, exception.message)
                     when(recovery) {

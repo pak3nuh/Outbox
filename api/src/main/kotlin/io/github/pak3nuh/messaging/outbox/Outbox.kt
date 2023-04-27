@@ -9,4 +9,8 @@ interface Outbox : AutoCloseable {
      */
     fun submit(entry: Entry)
 
+    /**
+     * Processes every entry it has that has not yet marked as processed.
+     */
+    fun processEntries()
 }
