@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 
 class LockFactoryImplTest {
-    private val provider = mockk<LockServiceProvider>()
+    private val provider = mockk<LockProvider>()
     private val sut = LockFactoryImpl(provider)
 
     @Test

@@ -11,12 +11,12 @@ import java.nio.file.Paths
 import java.time.Duration
 import java.util.*
 
-private val logger: Logger = KLoggerFactory.getLogger<SharedFilesystemProviderTest>()
+private val logger: Logger = KLoggerFactory.getLogger<SharedFilesystemLockProviderTest>()
 
-class SharedFilesystemProviderTest {
+class SharedFilesystemLockProviderTest {
 
     private val lockFolder = Paths.get(System.getProperty("java.io.tmpdir"))
-    private val provider = SharedFilesystemProvider(lockFolder)
+    private val provider = SharedFilesystemLockProvider(lockFolder)
 
     @Test
     fun `should acquire and release lock`() {
@@ -48,7 +48,7 @@ class SharedFilesystemProviderTest {
     @Test
     fun `should tolerate existing files`() {
         val tempDirectory = Files.createTempDirectory(lockFolder, null)
-        val provider = SharedFilesystemProvider(tempDirectory)
+        val provider = SharedFilesystemLockProvider(tempDirectory)
         assertEquals(1, tempDirectory.toFile().walk().count())
 
         val lockId = UUID.randomUUID().toString()
