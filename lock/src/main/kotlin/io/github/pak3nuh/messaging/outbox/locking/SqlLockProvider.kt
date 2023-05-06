@@ -13,6 +13,7 @@ import java.sql.SQLTimeoutException
 import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 /**
@@ -42,11 +43,13 @@ interface SqlConnectionProvider {
 class SqlLockProvider(private val tableName: String, private val connectionProvider: SqlConnectionProvider) : LockProvider {
     override val provider: String = "builtin.sql"
 
+    private val idCache = ConcurrentHashMap<String, Unit>()
+
     override fun obtainLock(id: String, timeout: Duration?): Either<ProviderLock, ProviderError> {
         return try {
             val connection = connectionProvider.getConnection(timeout)
             connection.autoCommit = false
-            ensureId(id, connection)
+            idCache.computeIfAbsent(id) { ensureId(id, connection) }
             val sqlLock = SqlLock(connection, tableName, id, connectionProvider::release)
             sqlLock.lock()
             return Either.First(sqlLock)
@@ -58,19 +61,14 @@ class SqlLockProvider(private val tableName: String, private val connectionProvi
     }
 
     private fun ensureId(id: String, connection: Connection) {
-        val insertId = "insert into $tableName(lock_id) values(?)"
+        logger.debug("Ensuring id $id. Cache size is ${idCache.size}.")
+        val insertId = "insert into $tableName(lock_id) (select ? from $tableName where 0=(select count(*) from $tableName where lock_id = ?))"
         connection.prepareStatement(insertId).use {
             it.setString(1, id)
-            try {
-                logger.debug("Inserting row with id {}", id)
-                it.executeUpdate()
-                connection.commit()
-            } catch (e: SQLException) {
-                connection.rollback()
-                logger.debug("Error executing, most likely ID exists. Increase log severity to see error.")
-                logger.trace("Error message", e)
-                // id duplicated, do nothing
-            }
+            it.setString(2, id)
+            logger.debug("Inserting row with id {}", id)
+            it.executeUpdate()
+            connection.commit()
         }
     }
 
