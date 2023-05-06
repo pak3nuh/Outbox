@@ -24,3 +24,4 @@ The integration test module doesn't run by default. To run you need to add the p
 ### TODO list
 
 - document database schema or provide a liquibase patch
+- builder pattern to help instantiation
