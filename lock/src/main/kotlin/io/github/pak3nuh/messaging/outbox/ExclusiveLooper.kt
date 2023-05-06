@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @param loopSleepTime The time the looper waits before scheduling the next run. It doesn't count execution time.
  * @param lockTimeout The time waiting for the lock before times out.
  * @param loopAction The exclusive action to run.
+ * @param onEndAction An action to run when the [endLoop] function is called.
  */
 class ExclusiveLooper(
     private val lockFactory: LockFactory,
@@ -25,6 +26,7 @@ class ExclusiveLooper(
     private val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(),
     private val loopSleepTime: Duration = Duration.ofSeconds(1),
     private val lockTimeout: Duration = Duration.ofSeconds(1),
+    private val onEndAction: () -> Unit = {},
 ) {
 
     private val running = AtomicBoolean(false)
@@ -64,6 +66,7 @@ class ExclusiveLooper(
     fun endLoop() {
         running.set(false)
         executorService.shutdown()
+        onEndAction()
     }
 
     private companion object {
