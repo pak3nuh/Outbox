@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="OUTBOX_TABLE_NAME" value="stored_entries"/>
+    <property name="LOCKS_TABLE_NAME" value="application_locks"/>
+
+    <changeSet id="baseline-1" author="ncaro" failOnError="false">
+        <createTable tableName="${OUTBOX_TABLE_NAME}">
+            <column name="id" type="BIGINT" autoIncrement="true" incrementBy="1">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="created" type="java.sql.Types.TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="key" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="java.sql.Types.VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metadata" type="java.sql.Types.VARCHAR(10000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="submitted" type="java.sql.Types.TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="error" type="java.sql.Types.VARCHAR(10000)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="${OUTBOX_TABLE_NAME}" indexName="ix_${OUTBOX_TABLE_NAME}_created">
+            <column name="created" descending="false">
+                <constraints unique="false"/>
+            </column>
+        </createIndex>
+
+        <createTable tableName="${LOCKS_TABLE_NAME}">
+            <column name="lock_id" type="java.sql.Types.VARCHAR(256)">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="locked_at" type="java.sql.Types.TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

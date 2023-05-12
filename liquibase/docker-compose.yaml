@@ -1,0 +1,23 @@
+version: "3"
+services:
+  pg:
+    image: postgres:15
+    environment:
+      - "POSTGRES_PASSWORD=postgres"
+      - "POSTGRES_USER=postgres"
+      - "POSTGRES_DB=postgres"
+    ports:
+      - "5432:5432"
+  liquibase:
+    image: liquibase/liquibase:4.21
+    command:
+      - "--url=jdbc:postgresql://pg:5432/postgres"
+      - "--changeLogFile=changelog.xml"
+      - "--username=postgres"
+      - "--password=postgres"
+#      - "--log-level=DEBUG"
+      - "update"
+#      - "-DLOCKS_TABLE_NAME=application_locks"
+#      - "-DOUTBOX_TABLE_NAME=stored_entries"
+    volumes:
+      - "./database-schema.xml:/liquibase/changelog/changelog.xml"
