@@ -16,10 +16,10 @@
             <column name="created" type="java.sql.Types.TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
-            <column name="key" type="BLOB">
+            <column name="key" type="BINARY">
                 <constraints nullable="false"/>
             </column>
-            <column name="value" type="BLOB">
+            <column name="value" type="BINARY">
                 <constraints nullable="false"/>
             </column>
             <column name="user_id" type="java.sql.Types.VARCHAR(1000)">
@@ -32,7 +32,7 @@
                 <constraints nullable="true"/>
             </column>
             <column name="error" type="java.sql.Types.VARCHAR(10000)">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
         </createTable>
 

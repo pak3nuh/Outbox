@@ -15,7 +15,7 @@ supported databases. For now, tests include:
 - H2
 
 The integration test module doesn't run by default. To run you need to add the property `integration-test` like so
-`gradle integration-test:test -Pintegration-test`.
+`./gradlew integration-test:test -Pintegration-test`.
 
 ## Database schema
 

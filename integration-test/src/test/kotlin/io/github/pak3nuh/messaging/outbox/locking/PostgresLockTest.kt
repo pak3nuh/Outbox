@@ -1,16 +1,17 @@
 package io.github.pak3nuh.messaging.outbox.locking
 
+import io.github.pak3nuh.messaging.outbox.containers.createLiquibaseContainer
 import io.github.pak3nuh.messaging.outbox.containers.createPgContainer
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.Network
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
 
 @Testcontainers
 class PostgresLockTest: AbstractSqlLockTest() {
 
     override val container: GenericContainer<*>
-        get() = pgContainer
+        get() = dbContainer
 
     override val driverManagerProvider: DriverManagerProvider
         get() {
@@ -20,8 +21,17 @@ class PostgresLockTest: AbstractSqlLockTest() {
         }
 
     companion object {
+        val network = Network.SHARED
+
         @JvmStatic
         @Container
-        private val pgContainer: GenericContainer<*> = createPgContainer()
+        val dbContainer = createPgContainer("postgres", "postgres", "postgres")
+            .withNetwork(network)
+            .withNetworkAliases("db")
+
+        @JvmStatic
+        @Container
+        val liquibase = createLiquibaseContainer("postgresql://db:5432/postgres", dbContainer, "postgres", "postgres")
+            .withNetwork(network)
     }
 }

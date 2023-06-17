@@ -1,10 +1,12 @@
 package io.github.pak3nuh.messaging.outbox.storage
 
 import io.github.pak3nuh.messaging.outbox.Entry
+import io.github.pak3nuh.messaging.outbox.containers.createLiquibaseContainer
 import io.github.pak3nuh.messaging.outbox.containers.createPgContainer
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.testcontainers.containers.Network
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
@@ -13,16 +15,16 @@ class PostgresEntryStorageTest {
 
     @Test
     fun `should store entry`() {
-        val host = container.host
-        val port = container.firstMappedPort
-        val entryStorage = SqlEntryStorage("jdbc:postgresql://$host:$port/postgres", "postgres", "postgres")
+        val host = dbContainer.host
+        val port = dbContainer.firstMappedPort
+        val entryStorage = SqlEntryStorage("jdbc:postgresql://$host:$port/database", "postgres", "postgres")
         entryStorage.persist(
             Entry(
-            byteArrayOf(1),
-            byteArrayOf(2),
-            "should-store-entry",
-            mapOf(Pair("version","123"))
-        )
+                byteArrayOf(1),
+                byteArrayOf(2),
+                "should-store-entry",
+                mapOf(Pair("version","123"))
+            )
         )
 
         val batch = entryStorage.getBatch()
@@ -35,8 +37,17 @@ class PostgresEntryStorageTest {
     }
 
     companion object {
+        val network = Network.SHARED
+
         @JvmStatic
         @Container
-        val container = createPgContainer()
+        val dbContainer = createPgContainer("database", "postgres", "postgres")
+            .withNetwork(network)
+            .withNetworkAliases("db")
+
+        @JvmStatic
+        @Container
+        val liquibase = createLiquibaseContainer("postgresql://db:5432/database", dbContainer, "postgres", "postgres")
+            .withNetwork(network)
     }
 }
