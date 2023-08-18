@@ -47,7 +47,7 @@ class PostgresEntryStorageTest {
 
         @JvmStatic
         @Container
-        val liquibase = createLiquibaseContainer("postgresql://db:5432/database", dbContainer, "postgres", "postgres")
+        val liquibase = createLiquibaseContainer("jdbc:postgresql://db:5432/database", dbContainer, "postgres", "postgres")
             .withNetwork(network)
     }
 }

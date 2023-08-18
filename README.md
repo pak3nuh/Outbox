@@ -17,6 +17,8 @@ supported databases. For now, tests include:
 The integration test module doesn't run by default. To run you need to add the property `integration-test` like so
 `./gradlew integration-test:test -Pintegration-test`.
 
+or a single test by `./gradlew integration-test:test -Pintegration-test --tests 'MySqlEntryStorageTest'`
+
 ## Database schema
 
 The expected schema is specified on a [liquibase](https://docs.liquibase.com) changelog under [./liquibase](./liquibase)
@@ -30,11 +32,23 @@ The changelog file is configurable with some properties, set by prefixing them w
 | LOCKS_TABLE_NAME  | Name of the application locks table | application_locks |
 | OUTBOX_TABLE_NAME | Name of the outbox records table    | stored_entries    |
 
+The [docker-compose](./liquibase/docker-compose.yaml) file should be an easy way to test or apply the schemas
+to a long running database.
+
+### Database support
+
+Currently, the supported databases are:
+- H2
+- Postgres
+- MySql
+
+Adding support for more databases is not hard. To do so we just need to add the required changeset to the liquibase
+schema, add the integration tests for the specific database (should be a simple copy from the existing ones) and
+add the driver as a test dependency.
+
 ## Resources
 
 - https://mockk.io/
 - https://www.ktorm.org/
 
 ### TODO list
-
-- builder pattern to help instantiation

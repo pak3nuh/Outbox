@@ -31,7 +31,7 @@ class PostgresLockTest: AbstractSqlLockTest() {
 
         @JvmStatic
         @Container
-        val liquibase = createLiquibaseContainer("postgresql://db:5432/postgres", dbContainer, "postgres", "postgres")
+        val liquibase = createLiquibaseContainer("jdbc:postgresql://db:5432/postgres", dbContainer, "postgres", "postgres")
             .withNetwork(network)
     }
 }

@@ -8,7 +8,16 @@ services:
       - "POSTGRES_DB=postgres"
     ports:
       - "5432:5432"
-  liquibase:
+  mysql:
+    image: mysql:8.0.32
+    environment:
+      - "MYSQL_ROOT_PASSWORD=mysql"
+      - "MYSQL_USER=mysql"
+      - "MYSQL_PASSWORD=mysql"
+      - "MYSQL_DATABASE=database"
+    ports:
+      - "3306:3306"
+  liquibase-pg:
     image: liquibase/liquibase:4.21
     command:
       - "--url=jdbc:postgresql://pg:5432/postgres"
@@ -19,5 +28,21 @@ services:
       - "update"
 #      - "-DLOCKS_TABLE_NAME=application_locks"
 #      - "-DOUTBOX_TABLE_NAME=stored_entries"
+    volumes:
+      - "./database-schema.xml:/liquibase/changelog/changelog.xml"
+
+  liquibase-mysql:
+    image: liquibase/liquibase:4.21
+    environment:
+      - "INSTALL_MYSQL=true"
+    command:
+      - "--url=jdbc:mysql://mysql:3306/database"
+      - "--changeLogFile=changelog.xml"
+      - "--username=mysql"
+      - "--password=mysql"
+      #      - "--log-level=DEBUG"
+      - "update"
+    #      - "-DLOCKS_TABLE_NAME=application_locks"
+    #      - "-DOUTBOX_TABLE_NAME=stored_entries"
     volumes:
       - "./database-schema.xml:/liquibase/changelog/changelog.xml"
