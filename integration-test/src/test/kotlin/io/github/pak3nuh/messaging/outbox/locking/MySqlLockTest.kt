@@ -1,10 +1,9 @@
 package io.github.pak3nuh.messaging.outbox.locking
 
+import io.github.pak3nuh.messaging.outbox.containers.createLiquibaseContainer
 import io.github.pak3nuh.messaging.outbox.containers.createMySqlContainer
-import io.github.pak3nuh.util.logging.KLoggerFactory
-import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.containers.Network
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
@@ -12,7 +11,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 class MySqlLockTest: AbstractSqlLockTest() {
 
     override val container: GenericContainer<*>
-        get() = Companion.container
+        get() = dbContainer
 
     override val driverManagerProvider: DriverManagerProvider
         get() {
@@ -22,15 +21,17 @@ class MySqlLockTest: AbstractSqlLockTest() {
         }
 
     companion object {
+        val network = Network.SHARED
 
         @JvmStatic
         @Container
-        private val container: GenericContainer<*> = createMySqlContainer()
+        val dbContainer = createMySqlContainer("database", "mysql", "mysql")
+            .withNetwork(network)
+            .withNetworkAliases("db")
 
         @JvmStatic
-        @BeforeAll
-        fun initContainer() {
-            container.followOutput(Slf4jLogConsumer(KLoggerFactory.getLogger<MySqlLockTest>()))
-        }
+        @Container
+        val liquibase = createLiquibaseContainer("jdbc:mysql://db:3306/database", dbContainer, "mysql", "mysql", installMySql = true)
+            .withNetwork(network)
     }
 }
