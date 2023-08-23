@@ -35,8 +35,8 @@ class OutboxBuilder internal constructor() {
     /**
      * Provides a SQL based [EntryStorage].
      */
-    fun withSqlStorage(conStr: String, user: String?, pass: String?) = apply {
-        entryStorage = SqlEntryStorage(conStr, user, pass)
+    fun withSqlStorage(conStr: String, user: String?, pass: String?, tableName: String = "stored_entries") = apply {
+        entryStorage = SqlEntryStorage(conStr, user, pass, tableName)
     }
 
     /**

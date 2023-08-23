@@ -8,7 +8,7 @@ import java.sql.Connection
 class H2SqlEntryStorageTest: SqlEntryStorageTest() {
 
     override val storage by lazy {
-        SqlEntryStorage("jdbc:h2:mem:test", null, null)
+        SqlEntryStorage("jdbc:h2:mem:test", null, null, "stored_entries")
     }
 
     override val connection: Connection

@@ -7,6 +7,7 @@ dependencies {
     testImplementation(project(":lock"))
     testImplementation(project(":impl"))
     testImplementation(project(":util"))
+    testImplementation(project(":builder"))
     testImplementation("org.postgresql:postgresql:42.6.0")
     testImplementation("mysql:mysql-connector-java:8.0.32")
 }

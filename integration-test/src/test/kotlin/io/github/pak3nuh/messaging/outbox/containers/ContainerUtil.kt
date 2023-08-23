@@ -7,6 +7,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.startupcheck.IsRunningStartupCheckStrategy
 import org.testcontainers.containers.wait.strategy.Wait
 import java.time.Duration
+import java.util.UUID
 
 private val dbLogger: Logger = LoggerFactory.getLogger("DbLogger")
 private val liquibaseLogger: Logger = LoggerFactory.getLogger("LiquibaseLogger")
@@ -58,19 +59,37 @@ fun createMySqlContainer(dbName: String, dbUser:String, dbPass: String, timeout:
  * @param dbPass The database password.
  * @param timeout The timeout to wait for the liquibase command to run.
  */
-fun createLiquibaseContainer(dbUrl: String, dbContainer: GenericContainer<*>, dbUser: String, dbPass: String, timeout: Long = 30, installMySql: Boolean = false): GenericContainer<*> {
+fun createLiquibaseContainer(
+    dbUrl: String,
+    dbContainer: GenericContainer<*>,
+    dbUser: String,
+    dbPass: String,
+    timeout: Long = 30,
+    installMySql: Boolean = false,
+    outboxTableName: String = "stored_entries",
+    locksTableName: String = "application_locks",
+    forceRun: Boolean = false
+): GenericContainer<*> {
     val envMap = mutableMapOf<String, String>()
     if (installMySql) {
         envMap["INSTALL_MYSQL"] = "true"
+    }
+    val liquibaseTableName = if (forceRun) {
+        "db-changelog-${UUID.randomUUID()}"
+    } else {
+        "DATABASECHANGELOG"
     }
     return GenericContainer("liquibase/liquibase:4.21")
         .withCommand(
             "--url=$dbUrl",
             "--changeLogFile=changelog.xml",
+            "--databaseChangeLogTableName=$liquibaseTableName",
             "--username=$dbUser",
             "--password=$dbPass",
             "--log-level=INFO",
-            "update"
+            "update",
+            "-DOUTBOX_TABLE_NAME=$outboxTableName",
+            "-DLOCKS_TABLE_NAME=$locksTableName"
         )
         .withEnv(envMap)
         .dependsOn(dbContainer)

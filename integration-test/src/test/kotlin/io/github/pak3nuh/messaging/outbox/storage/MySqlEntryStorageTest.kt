@@ -16,7 +16,7 @@ class MySqlEntryStorageTest {
     fun `should store entry`() {
         val host = dbContainer.host
         val port = dbContainer.firstMappedPort
-        val entryStorage = SqlEntryStorage("jdbc:mysql://$host:$port/database", "mysql", "mysql")
+        val entryStorage = SqlEntryStorage("jdbc:mysql://$host:$port/database", "mysql", "mysql", "stored_entries")
         entryStorage.persist(
             Entry(
                 byteArrayOf(1),

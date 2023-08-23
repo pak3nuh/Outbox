@@ -11,11 +11,11 @@ import org.ktorm.entity.*
 import org.ktorm.schema.*
 import java.time.Instant
 
-class SqlEntryStorage(conStr: String, user: String?, pass: String?) : EntryStorage {
+class SqlEntryStorage(conStr: String, user: String?, pass: String?, tableName: String) : EntryStorage {
 
     private val database = Database.connect(conStr, user = user, password = pass)
 
-    private val storedEntriesTable = database.sequenceOf(EntryTable)
+    private val storedEntriesTable = database.sequenceOf(EntryTable(tableName))
 
     private val codec = Gson()
 
@@ -71,7 +71,7 @@ class SqlEntryStorage(conStr: String, user: String?, pass: String?) : EntryStora
     private object MapToken: TypeToken<Map<String, String>>()
 }
 
-private object EntryTable : Table<EntryEntity>("stored_entries") {
+private class EntryTable(tableName: String) : Table<EntryEntity>(tableName) {
     val id = int("id").primaryKey().bindTo { it.id }
     val created = timestamp("created").bindTo { it.created }
     val key = bytes("key").bindTo { it.key }
