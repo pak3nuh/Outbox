@@ -17,7 +17,7 @@ class PostgresEntryStorageTest {
     fun `should store entry`() {
         val host = dbContainer.host
         val port = dbContainer.firstMappedPort
-        val entryStorage = SqlEntryStorage("jdbc:postgresql://$host:$port/database", "postgres", "postgres")
+        val entryStorage = SqlEntryStorage("jdbc:postgresql://$host:$port/database", "postgres", "postgres", "stored_entries")
         entryStorage.persist(
             Entry(
                 byteArrayOf(1),
