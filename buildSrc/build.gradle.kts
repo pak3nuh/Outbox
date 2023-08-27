@@ -6,7 +6,10 @@ repositories {
     mavenCentral()
 }
 
+val jvmVersion = "11"
+
 val compileKotlin: org.jetbrains.kotlin.gradle.tasks.KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "11"
-}
+compileKotlin.kotlinOptions.jvmTarget = jvmVersion
+
+val compileJava: JavaCompile by tasks
+compileJava.targetCompatibility = jvmVersion
